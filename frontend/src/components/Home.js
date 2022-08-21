@@ -38,9 +38,9 @@ const Home = ({match}) => {
     const alert = useAlert();
  const dispatch = useDispatch();
 
- const {loading, products, error, productsCount, resPerPage} = useSelector(state => state.products)
+ const {loading, products, error, productsCount, resPerPage, } = useSelector(state => state.products)
 
- const keyword = match.params.keyword;
+ const keyword = match.params.keyword
  
  
 
@@ -61,6 +61,7 @@ const Home = ({match}) => {
    
     setCurrentPage(pageNumber);
   }
+
 
    
 
@@ -94,8 +95,32 @@ const Home = ({match}) => {
               value = {price}
               onChange = {price => setPrice(price)}
               />
+              <hr className= "my-5"/>
 
+              <div className= 'mt-5'>
+                <h4 className= 'mb-3'>
+                  Categories
+                </h4>
+                <ul className = "pl-0">
+                {categories.map(category => (
+                  <li
+                  style = {{cursor: 'pointer',
+                listStyleType: 'none',
+                }}
+                key={category}
+                onClick = {() => setCategory(category)
+                
+                }
+                  
+                  >
+                    {category}
+
+                  </li>
+                ))}
+                </ul>
               </div>
+
+          </div>
          </div>
          <div className= "col-6 col-md-9">
            <div className= "row">
