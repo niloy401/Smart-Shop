@@ -5,10 +5,18 @@ const catchAsyncErrors = require('../middlewares/catchAsynchErrors');
 const sendToken = require('../utils/jwtToken');
 const sendEmail = require('../utils/sendEmail');
 const crypto = require('crypto');
+const cloudinary = require('cloudinary');
 
 //Registering a user or customer => api/v1/register
 
 exports.registerUser = catchAsyncErrors(async (req, res, next) => {
+
+    const result = await cloudinary.v2.uploader.upload(req.body.avatar, {
+        folder: 'avatars',
+        width: 150,
+        crop : "scale"
+
+    })
 
     const{name, email, password} = req.body;
 
@@ -17,8 +25,8 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
     email,
     password,
     avatar:{
-        public_id: 'Avatars/39c706fdb9f87f1ac86185aca6892cf3_pdmu7r',
-        url: 'https://res.cloudinary.com/geralt500/image/upload/v1660040588/Avatars/39c706fdb9f87f1ac86185aca6892cf3_pdmu7r.jpg'
+        public_id: result.public_id,
+        url: result.secure_url
     }
 
     })
@@ -63,7 +71,7 @@ const resetToken = user.getResetPasswordToken();
 await user.save({validateBeforeSave: false});
 
 // Creating reset password URL
-const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/password/reset/${resetToken}`;
+const resetUrl = `${process.env.FRONTEND_URL}/password/reset/${resetToken}`;
 const message = `Your password reset link is here:\n\n${resetUrl}\n\nIf you didn't request this, please ignore this email.`
 
 try {
@@ -147,6 +155,26 @@ exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
     }
 
     // update avatar
+    if(req.body.avatar !== ''){
+        const user = await User.findById(req.user.id)
+
+        const image_id = user.avatar.public_id;
+        const res = await cloudinary.v2.uploader.destroy(image_id);
+
+        //exports.registerUser = catchAsyncErrors(async (req, res, next) => {
+
+            const result = await cloudinary.v2.uploader.upload(req.body.avatar, {
+                folder: 'avatars',
+                width: 150,
+                crop : "scale"
+        
+            })
+            newUserData.avatar = {
+                public_id: result.public_id,
+                url: result.secure_url
+            }
+    }
+    
     const user = await User.findByIdAndUpdate(req.user.id, newUserData, {new: true, runValidators: true, 
         useFindAndModify: false});
 
