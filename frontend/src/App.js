@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import {BrowserRouter as Router, Route} from 'react-router-dom';
 
@@ -10,6 +10,9 @@ import ProductDetails from './components/product/ProductDetails'
 
 import Cart from './components/cart/Cart'
 import Shipping from './components/cart/Shipping';
+import ConfirmOrder from './components/cart/ConfirmOrder'
+import Payment from './components/cart/Payment'
+import OrderSuccess from './components/cart/OrderSuccess'
 
 import Login from './components/user/Login'
 import Register from './components/user/Register'
@@ -22,13 +25,28 @@ import NewPassword from './components/user/NewPassword';
 import ProtectedRoute from './components/route/ProtectedRoute'
 import {loadUser} from './actions/userActions'
 import store from './store'
+import axios from  'axios'
+
+//Payment
+import {Elements} from  '@stripe/react-stripe-js'
+import {loadStripe} from  '@stripe/stripe-js'
 
 
 function App() {
+  const [stripeApiKey, setStripeApiKey] = useState('');
 
   useEffect(() => {
     store.dispatch(loadUser());
+
+    async function  getStripeApiKey(){
+      const {data} = await axios.get('/api/v1/stripeapi');
+      setStripeApiKey(data.stripeApiKey)
+  }
+
+  getStripeApiKey();
+
   },[])
+
   return (
     <Router>
     <div className="App">
@@ -40,13 +58,20 @@ function App() {
 
       <Route path= "/cart" component={Cart} exact />
       <ProtectedRoute path= "/shipping" component={Shipping} />
+      <ProtectedRoute path= "/order/confirm" component={ConfirmOrder} />
+      <ProtectedRoute path= "/success" component={OrderSuccess} />
+      {stripeApiKey &&
+       <Elements stripe = {loadStripe(stripeApiKey)}>
+        <ProtectedRoute path= "/payment" component={Payment} />
+       </Elements>
+      }
 
       <Route path= "/login" component={Login}  />
       <Route path= "/register" component={Register} />
       <Route path= "/password/forgot" component={ForgotPassword} exact/>
       <Route path= "/password/reset/:token" component={NewPassword} exact/>
       <ProtectedRoute path= "/me" component={Profile} exact/>
-      I<ProtectedRoute path= "/me/update" component={UpdateProfile} exact/>
+      <ProtectedRoute path= "/me/update" component={UpdateProfile} exact/>
       <ProtectedRoute path= "/password/update" component={UpdatePassword} exact/>
       </div>
       <Footer />
